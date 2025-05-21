@@ -33,11 +33,13 @@ jobs:
           find ./dist -name "*.app" -type d -exec zip -r release/safari-extension-$(date +%Y%m%d%H%M%S).zip {} \;
 
       - name: 上传构建产物
-        uses: actions/upload-artifact@v2
+        uses: actions/upload-artifact@v4
         with:
           name: safari-extension
           path: release/*.zip
           retention-days: 30
+          if-no-files-found: error # 如果没找到文件则报错
+          compression-level: 9 # 最高压缩率，减小文件大小
 
       - name: 创建发布版本
         id: create_release
