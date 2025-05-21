@@ -25,18 +25,36 @@ jobs:
           xcrun safari-web-extension-converter . --project-location ./build --no-prompt --no-open
 
           # 列出生成的文件以便调试
+          echo "生成的文件列表："
           find ./build -type f | sort
+
+          # 列出生成的目录结构
+          echo "目录结构："
+          find ./build -type d | sort
 
       - name: 打包扩展
         run: |
-          # 查找生成的项目目录
+          # 查找生成的项目目录（修复路径问题）
+          echo "查找Xcode项目目录..."
+          find ./build -name "*.xcodeproj" -type d
+
           PROJECT_DIR=$(find ./build -name "*.xcodeproj" -type d | head -n 1)
           if [ -z "$PROJECT_DIR" ]; then
             echo "错误：未找到Xcode项目"
             exit 1
           fi
 
-          cd $(dirname "$PROJECT_DIR")
+          echo "找到项目目录: $PROJECT_DIR"
+          PARENT_DIR=$(dirname "$PROJECT_DIR")
+          echo "父目录: $PARENT_DIR"
+
+          # 确保目录存在
+          if [ ! -d "$PARENT_DIR" ]; then
+            echo "错误：项目父目录不存在"
+            exit 1
+          fi
+
+          cd "$PARENT_DIR"
           # 获取项目名称用于scheme
           PROJECT_NAME=$(basename "$PROJECT_DIR" .xcodeproj)
           echo "正在构建项目: $PROJECT_NAME"
