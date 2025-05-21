@@ -1,0 +1,15 @@
+{
+  "manifest_version": 3,
+  "name": "Custom Style Safari Extension",
+  "version": "1.0",
+  "description": "应用自定义样式到网站",
+  "icons": {
+    "128": "icons/icon-128.png"
+  },
+  "content_scripts": [
+    {
+      "matches": ["<all_urls>"],
+      "css": ["custom/yuanbao.css"]
+    }
+  ]
+}
