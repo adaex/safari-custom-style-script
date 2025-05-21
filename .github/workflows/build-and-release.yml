@@ -33,7 +33,7 @@ jobs:
           find ./dist -name "*.app" -type d -exec zip -r release/safari-extension-$(date +%Y%m%d%H%M%S).zip {} \;
 
       - name: 上传构建产物
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v2
         with:
           name: safari-extension
           path: release/*.zip
