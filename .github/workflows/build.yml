@@ -18,22 +18,47 @@ jobs:
         with:
           xcode-version: latest-stable
 
-      - name: 安装依赖
-        run: |
-          npm install -g @apple/safari-web-extension-converter
-
       - name: 构建Safari扩展
         run: |
           mkdir -p build
-          safari-web-extension-converter . --project-location ./build --no-prompt --no-open
+          # 使用系统自带的xcrun命令运行Safari Web Extension Converter
+          xcrun safari-web-extension-converter . --project-location ./build --no-prompt --no-open
+
+          # 列出生成的文件以便调试
+          find ./build -type f | sort
 
       - name: 打包扩展
         run: |
-          cd build/*/*.xcodeproj/..
-          xcodebuild -scheme "*/macOS" build
+          # 查找生成的项目目录
+          PROJECT_DIR=$(find ./build -name "*.xcodeproj" -type d | head -n 1)
+          if [ -z "$PROJECT_DIR" ]; then
+            echo "错误：未找到Xcode项目"
+            exit 1
+          fi
+
+          cd $(dirname "$PROJECT_DIR")
+          # 获取项目名称用于scheme
+          PROJECT_NAME=$(basename "$PROJECT_DIR" .xcodeproj)
+          echo "正在构建项目: $PROJECT_NAME"
+
+          # 列出可用的scheme
+          xcodebuild -project "$PROJECT_NAME.xcodeproj" -list
+
+          # 使用正确的scheme名称构建，添加更多调试输出
+          set -x
+          xcodebuild -project "$PROJECT_NAME.xcodeproj" -scheme "$PROJECT_NAME (macOS)" build CODE_SIGN_IDENTITY=- CODE_SIGNING_REQUIRED=NO
+          set +x
+
+          # 查找构建结果
+          echo "查找构建产物:"
+          find . -name "*.app" | sort
 
       - name: 上传构建产物
         uses: actions/upload-artifact@v4
         with:
           name: safari-extension
-          path: build/*/*.xcarchive
+          path: |
+            build/**/*.app
+            build/**/Products/Debug/*.app
+            build/**/build/Debug/*.app
+            **/DerivedData/**/Build/Products/Debug/*.app
