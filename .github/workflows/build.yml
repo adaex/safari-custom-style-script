@@ -1,0 +1,39 @@
+name: 构建Safari扩展
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  build:
+    runs-on: macos-latest
+
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: 设置Xcode环境
+        uses: maxim-lobanov/setup-xcode@v1
+        with:
+          xcode-version: latest-stable
+
+      - name: 安装依赖
+        run: |
+          npm install -g @apple/safari-web-extension-converter
+
+      - name: 构建Safari扩展
+        run: |
+          mkdir -p build
+          safari-web-extension-converter . --project-location ./build --no-prompt --no-open
+
+      - name: 打包扩展
+        run: |
+          cd build/*/*.xcodeproj/..
+          xcodebuild -scheme "*/macOS" build
+
+      - name: 上传构建产物
+        uses: actions/upload-artifact@v3
+        with:
+          name: safari-extension
+          path: build/*/*.xcarchive
